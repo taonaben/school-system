@@ -1,10 +1,7 @@
-
-/**
- * MathSub
- */
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -14,65 +11,103 @@ public class GeoSub {
     public static final String DB_USERNAME = "root";
     public static final String DB_PASSWORD = "!Projectbaby09";
 
+    public static String studentId;
+
     public static void main(String[] args) {
-        databaseAdd();
+        try (Scanner scanner = new Scanner(System.in)) {
+            searchAlgorithm.getDetails();
+            searchAlgorithm.displayer();
+            studentId = searchAlgorithm.getStudentId(searchAlgorithm.nameSearch);
+
+            if (studentId != null && isStudentRegistered(studentId)) {
+                System.out.println("\nStudent ID found: " + studentId);
+                System.out.println("Proceeding to edit test scores.");
+                editTestScores(studentId, scanner);
+            } else {
+                System.out.println("\nStudent ID not found. Registering new student.");
+                StudentLogin.databaseAdd();
+            }
+        }
     }
 
-    private static void databaseAdd() {
-        Scanner scanner = new Scanner(System.in);
-
-        // Input student details
-
-        System.out.print("Enter your Student ID: ");
-        String studentId = scanner.nextLine();
-
-        System.out.print("Test 1 score/50: ");
-        double test1 = scanner.nextDouble();
-        double test1Perc = (test1/50)*100;
-
-        System.out.print("Test 2 score/30: ");
-        double test2 = scanner.nextDouble();
-        double test2Perc = (test2/30)*100;
-
-        System.out.print("Test 3 score/50: ");
-        double test3 = scanner.nextDouble();
-        double test3Perc = (test3/50)*100;
-        scanner.nextLine(); // Consume the newline character
-        
-        double overall = ((test1Perc+test1Perc+test3Perc)/300)*100;
-
-        try {
-            // Load the MySQL JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
-
-            // Establish the database connection
-            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-            connection.setAutoCommit(false); // Start the transaction
-
-            String sql = "INSERT INTO geo (stud_Id, test1, test2, test3, geo) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-
-            preparedStatement.setString(1, studentId);
-            preparedStatement.setDouble(2, test1Perc);
-            preparedStatement.setDouble(3, test2Perc);
-            preparedStatement.setDouble(4, test3Perc);
-            preparedStatement.setDouble(5, overall);
-            preparedStatement.executeUpdate();
-
-            String geo_sql= "INSERT INTO subjects_table(geo) VALUES (?)";
-            PreparedStatement preparedStatement2 = connection.prepareStatement(geo_sql);
-
-            preparedStatement2.setDouble(1, overall);
-            preparedStatement2.executeUpdate();
-
-            connection.commit();
-            System.out.println("Details recorded");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+    private static boolean isStudentRegistered(String studentId) {
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD)) {
+            String selectQuery = "SELECT * FROM geo WHERE stud_Id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
+                preparedStatement.setString(1, studentId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    return resultSet.next();
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            scanner.close();
+        }
+        return false;
+    }
+
+    public static String studentId1 = studentId;
+    public static double test1;
+
+    private static void editTestScores(String studentId1, Scanner scanner) {
+
+        System.out.println(studentId1);
+        try {
+            System.out.print("Enter Test 1 score/50: ");
+            double test1 = getValidatedScore(scanner);
+
+            System.out.print("Enter Test 2 score/30: ");
+            double test2 = getValidatedScore(scanner);
+
+            System.out.print("Enter Test 3 score/50: ");
+            double test3 = getValidatedScore(scanner);
+
+            double test1Perc = (test1 / 50) * 100;
+            double test2Perc = (test2 / 30) * 100;
+            double test3Perc = (test3 / 50) * 100;
+            double overall = ((test1Perc + test2Perc + test3Perc) / 300) * 100;
+
+            try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD)) {
+                connection.setAutoCommit(false);
+
+                String updateQuery = "UPDATE geo SET test1 = ?, test2 = ?, test3 = ?, geo = ? WHERE stud_Id = ?";
+                try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+                    preparedStatement.setDouble(1, test1);
+                    preparedStatement.setDouble(2, test2);
+                    preparedStatement.setDouble(3, test3);
+                    preparedStatement.setDouble(4, overall);
+                    preparedStatement.setString(5, studentId);
+                    preparedStatement.executeUpdate();
+                }
+
+                String geo_sql = "UPDATE subjects_table SET geo = ? WHERE stud_id = ?";
+                try (PreparedStatement preparedStatement2 = connection.prepareStatement(geo_sql)) {
+                    preparedStatement2.setDouble(1, overall);
+                    preparedStatement2.setString(2, studentId);
+                    preparedStatement2.executeUpdate();
+                }
+
+                connection.commit();
+                System.out.println("Test scores updated successfully.");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static double getValidatedScore(Scanner scanner) {
+        while (true) {
+            try {
+                double score = Double.parseDouble(scanner.nextLine());
+                if (score < 0 || score > 100) {
+                    System.out.println("Invalid score. Please enter a value between 0 and 100.");
+                } else {
+                    return score;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a numeric score.");
+            }
         }
     }
 }

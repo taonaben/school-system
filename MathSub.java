@@ -69,7 +69,7 @@ public class MathSub {
             try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD)) {
                 connection.setAutoCommit(false);
 
-                String updateQuery = "UPDATE math SET test1 = ?, test2 = ?, test3 = ?, math_score = ? WHERE stud_Id = ?";
+                String updateQuery = "UPDATE math SET test1 = ?, test2 = ?, test3 = ?, math = ? WHERE stud_Id = ?";
                 try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
                     preparedStatement.setDouble(1, test1);
                     preparedStatement.setDouble(2, test2);
