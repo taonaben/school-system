@@ -3,7 +3,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Scanner;
+import java.util.*;
 
 public class MathSub {
 
@@ -13,20 +13,26 @@ public class MathSub {
 
     public static String studentId;
 
-    public static void main(String[] args) {
-        try (Scanner scanner = new Scanner(System.in)) {
-            searchAlgorithm.getDetails();
-            searchAlgorithm.displayer();
-            studentId = searchAlgorithm.getStudentId(searchAlgorithm.nameSearch);
+    public static Scanner sc = new Scanner(System.in);
 
-            if (studentId != null && isStudentRegistered(studentId)) {
-                System.out.println("\nStudent ID found: " + studentId);
-                System.out.println("Proceeding to edit test scores.");
-                editTestScores(studentId, scanner);
-            } else {
-                System.out.println("\nStudent ID not found. Registering new student.");
-                StudentLogin.databaseAdd();
+    public static void main(String[] args) {
+        
+        searchAlgorithm search = new searchAlgorithm();
+        search.getDetails();
+        search.displayer();
+        studentId = search.getStudentId(search.nameSearch).toString();
+        
+
+        if (studentId != null && isStudentRegistered(studentId)) {
+            System.out.println("\nStudent ID found: " + studentId);
+            System.out.println("Proceeding to edit test scores.");
+            getMarks();
+            if (marksCompleted) {
+                editTestScores();
             }
+        } else {
+            System.out.println("\nStudent ID not found. Registering new student.");
+            StudentLogin.databaseAdd();
         }
     }
 
@@ -45,69 +51,78 @@ public class MathSub {
         return false;
     }
 
-    public static String studentId1 = studentId;
-    public static double test1;
+    public static double test1, test2, test3, test1Perc, test2Perc, test3Perc, overall;
+    public static boolean marksCompleted = false;
 
-    private static void editTestScores(String studentId1, Scanner scanner) {
+    public static void getMarks() {
 
-        System.out.println(studentId1);
-        try {
-            System.out.print("Enter Test 1 score/50: ");
-            double test1 = getValidatedScore(scanner);
+        System.out.println(studentId);
 
-            System.out.print("Enter Test 2 score/30: ");
-            double test2 = getValidatedScore(scanner);
+        System.out.print("Enter Test 1 score/50: ");
+        test1 = Double.parseDouble(sc.nextLine());
+        System.out.print("Enter Test 2 score/30: ");
+        test2 = Double.parseDouble(sc.nextLine());
+        System.out.print("Enter Test 3 score/50: ");
+        test3 = Double.parseDouble(sc.nextLine());
 
-            System.out.print("Enter Test 3 score/50: ");
-            double test3 = getValidatedScore(scanner);
+        test1Perc = (test1 / 50) * 100;
+        test2Perc = (test2 / 30) * 100;
+        test3Perc = (test3 / 50) * 100;
+        overall = ((test1Perc + test2Perc + test3Perc) / 300) * 100;
 
-            double test1Perc = (test1 / 50) * 100;
-            double test2Perc = (test2 / 30) * 100;
-            double test3Perc = (test3 / 50) * 100;
-            double overall = ((test1Perc + test2Perc + test3Perc) / 300) * 100;
+        marksCompleted = true;
 
-            try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD)) {
-                connection.setAutoCommit(false);
-
-                String updateQuery = "UPDATE math SET test1 = ?, test2 = ?, test3 = ?, math = ? WHERE stud_Id = ?";
-                try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
-                    preparedStatement.setDouble(1, test1);
-                    preparedStatement.setDouble(2, test2);
-                    preparedStatement.setDouble(3, test3);
-                    preparedStatement.setDouble(4, overall);
-                    preparedStatement.setString(5, studentId);
-                    preparedStatement.executeUpdate();
-                }
-
-                String math_sql = "UPDATE subjects_table SET math = ? WHERE stud_id = ?";
-                try (PreparedStatement preparedStatement2 = connection.prepareStatement(math_sql)) {
-                    preparedStatement2.setDouble(1, overall);
-                    preparedStatement2.setString(2, studentId);
-                    preparedStatement2.executeUpdate();
-                }
-
-                connection.commit();
-                System.out.println("Test scores updated successfully.");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
     }
 
-    private static double getValidatedScore(Scanner scanner) {
-        while (true) {
-            try {
-                double score = Double.parseDouble(scanner.nextLine());
-                if (score < 0 || score > 100) {
-                    System.out.println("Invalid score. Please enter a value between 0 and 100.");
-                } else {
-                    return score;
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a numeric score.");
+    public static double score;
+
+    // public static double getValidatedScore(Scanner sc) {
+    // while (true) {
+    // try {
+    // while (sc.hasNextLine()) {
+    // System.out.println("hello");
+    // score = Double.parseDouble(sc.nextLine());
+    // if (score < 0 || score > 100) {
+    // System.out.println("Invalid score. Please enter a value between 0 and 100.");
+    // } else {
+    // return score;
+    // }
+    // }
+
+    // } catch (NumberFormatException e) {
+    // System.out.println("Invalid input. Please enter a numeric score.");
+    // }
+    // }
+    // }
+
+    private static void editTestScores() {
+
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD)) {
+            connection.setAutoCommit(false);
+
+            String updateQuery = "UPDATE math SET test1 = ?, test2 = ?, test3 = ?, math = ? WHERE stud_Id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
+                preparedStatement.setDouble(1, test1);
+                preparedStatement.setDouble(2, test2);
+                preparedStatement.setDouble(3, test3);
+                preparedStatement.setDouble(4, overall);
+                preparedStatement.setString(5, studentId);
+                preparedStatement.executeUpdate();
             }
+
+            String math_sql = "UPDATE subjects_table SET math = ? WHERE stud_id = ?";
+            try (PreparedStatement preparedStatement2 = connection.prepareStatement(math_sql)) {
+                preparedStatement2.setDouble(1, overall);
+                preparedStatement2.setString(2, studentId);
+                preparedStatement2.executeUpdate();
+            }
+
+            connection.commit();
+            System.out.println("Test scores updated successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+
     }
+
 }

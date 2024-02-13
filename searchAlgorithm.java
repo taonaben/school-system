@@ -3,7 +3,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Scanner;
+import java.util.*;
 
 public class searchAlgorithm {
     public static final String DB_URL = "jdbc:mysql://localhost:3306/schoolsystem";
@@ -14,21 +14,19 @@ public class searchAlgorithm {
     }
 
     // Search algorith start!!
-    public static String nameSearch;
-    public static boolean loginApproval = false;
-    public static String get_studId;
+    public String nameSearch;
+    public boolean loginApproval = false;
+    public String get_studId;
 
-    public static void getDetails() {
+    public String getDetails() {
         Scanner scanner = new Scanner(System.in);
-
         System.out.print("Enter name: ");
         nameSearch = scanner.nextLine();
-
         scanner.close();
+        return nameSearch;
     }
-    // public static String get_studId="huyt";
 
-    public static void displayer() {
+    public void displayer() {
 
         try (Connection connection1 = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD)) {
 
@@ -61,7 +59,7 @@ public class searchAlgorithm {
         }
     }
 
-    public static String getStudentId(String nameSearch) {
+    public String getStudentId(String nameSearch) {
         String studentId = null;
 
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD)) {

@@ -1,1 +1,1 @@
-SET Default value for table english
+SELECT * FROM subjects_table
