@@ -16,12 +16,11 @@ public class MathSub {
     public static Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
-        
+
         searchAlgorithm search = new searchAlgorithm();
         search.getDetails();
         search.displayer();
         studentId = search.getStudentId(search.nameSearch).toString();
-        
 
         if (studentId != null && isStudentRegistered(studentId)) {
             System.out.println("\nStudent ID found: " + studentId);
@@ -58,12 +57,16 @@ public class MathSub {
 
         System.out.println(studentId);
 
-        System.out.print("Enter Test 1 score/50: ");
-        test1 = Double.parseDouble(sc.nextLine());
-        System.out.print("Enter Test 2 score/30: ");
-        test2 = Double.parseDouble(sc.nextLine());
-        System.out.print("Enter Test 3 score/50: ");
-        test3 = Double.parseDouble(sc.nextLine());
+        if (sc.hasNextLine()) {
+            System.out.print("Enter Test 1 score/50: ");
+            test1 = Double.parseDouble(sc.nextLine());
+        } else if (sc.hasNextLine()) {
+            System.out.print("Enter Test 2 score/30: ");
+            test2 = Double.parseDouble(sc.nextLine());
+        } else if (sc.hasNextLine()) {
+            System.out.print("Enter Test 3 score/50: ");
+            test3 = Double.parseDouble(sc.nextLine());
+        }
 
         test1Perc = (test1 / 50) * 100;
         test2Perc = (test2 / 30) * 100;
